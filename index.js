@@ -10,8 +10,6 @@ const apiUrl = `https://www.googleapis.com/youtube/v3/playlistItems?part=snippet
     const data = await response.json()
     const videos = data.items
 
-    const container = document.querySelector('main')
-
     for (const video of videos) {
       const title = video.snippet.title
       const videoId = video.snippet.resourceId.videoId
@@ -21,37 +19,37 @@ const apiUrl = `https://www.googleapis.com/youtube/v3/playlistItems?part=snippet
       const thumbnail = video.snippet.thumbnails.medium.url
       const thumbnailWidth = video.snippet.thumbnails.medium.width
       const thumbnailHeight = video.snippet.thumbnails.medium.height
-      console.log(video.snippet.thumbnails)
 
       const details = await _getDetails(videoId)
-      console.log(details)
 
       // Get channel information
       const channelUrl = `https://www.googleapis.com/youtube/v3/channels?part=snippet&id=${channelId}&key=${apiKey}`
       const channelResponse = await fetch(channelUrl)
       const channelData = await channelResponse.json()
       const channelImage = channelData.items[0].snippet.thumbnails.default.url
+      const youtubeChannelUrl = `https://www.youtube.com/channel/${channelId}`
+      const youtubeVideoUrl = `https://www.youtube.com/watch?v=${videoId}`
 
       // Create new HTML element
-      const videoElement = document.createElement('div')
-      videoElement.classList.add('video')
-      videoElement.innerHTML = `
-        <a href="https://www.youtube.com/watch?v=${videoId}" target="_blank" class="video-thumbnail" width="${thumbnailWidth}" height="${thumbnailHeight}">
-          <img src="${thumbnail}" alt="${title}">
-          <span class="video-duration">${details.duration}</span>
-        </a>
-        <div class="video-info">
-          <a href="https://www.youtube.com/channel/${channelId}" target="_blank" class="video-channel" title="${channelName}">
-            <img src="${channelImage}" alt="${channelName}">
+      const videoHtml = /*html*/`  
+        <div class="flex flex-col gap-07">
+          <a href=${youtubeVideoUrl} target="_blank" class="relative w-full h-[180px]" width=${thumbnailWidth} height=${thumbnailHeight}>
+            <img src=${thumbnail} alt=${title} class="rounded w-full object-contain">
+            <span class="absolute bottom-[5px] right-[5px] bg-transparent-gray px-[2px] py-[1px] rounded text-xs font-bold text-white tracking-wide">${details.duration}</span>
           </a>
-          <div class="video-details">
-            <a href="https://www.youtube.com/watch?v=${videoId}" target="_blank" class="video-title">${title}</a>
-            <div class="video-meta">
-              <a href="https://www.youtube.com/channel/${channelId}" target="_blank" class="video-channel-name">${channelName}</a>
-              <div class="video-stats">
-                <p class="video-views">${details.views} views</p>
-                <p class="video-dot">•</p>
-                <p class="video-published">${_formatPublishedAt(publishedAt)}</p>
+          <div class="flex gap-07">
+            <a href=${youtubeChannelUrl} target="_blank" class="video-channel" title=${channelName}>
+              <img src="${channelImage}" alt="${channelName}" class="rounded-full w-9 h-9">
+            </a>
+            <div>
+              <a href=${youtubeVideoUrl} target="_blank" class="text-white font-semibold lines-ellipsis">${title}</a>
+              <div class="text-gray text-[.9rem] mt-2 leading-snug [$_*]:text-gray">
+                <a href=${youtubeChannelUrl} target="_blank" class="video-channel-name">${channelName}</a>
+                <div class="flex gap-[.3rem] items-center">
+                  <p>${details.views} views</p>
+                  <p class="text-[.5rem]">•</p>
+                  <p>${_formatPublishedAt(publishedAt)}</p>
+                </div>
               </div>
             </div>
           </div>
@@ -59,7 +57,8 @@ const apiUrl = `https://www.googleapis.com/youtube/v3/playlistItems?part=snippet
       `
 
       // Add new HTML element to container
-      container.appendChild(videoElement)
+      const container = document.querySelector('main')
+      container.insertAdjacentHTML('beforeend', videoHtml)
     }
   } catch (error) {
     console.error(error)
@@ -76,7 +75,6 @@ async function _getDetails (videoId) {
 }
 
 function _formatDuration (duration) {
-  console.log(duration)
   const match = duration.match(/PT(\d+)M(\d*)S?/)
   if (match) {
     const minutes = match[1]
